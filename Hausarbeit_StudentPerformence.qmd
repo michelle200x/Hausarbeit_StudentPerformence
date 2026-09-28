@@ -77,7 +77,7 @@ H4: Ein hohes elterliches Involvement steht in einem positiven Zusammenhang mit 
 
 #getwd() # Aktuelles Arbeitsverzeichnis
 # csv Datensatz einlesen
-Daten <- read.csv2("/Users/michellekha/Downloads/StudentPerformanceFactors.csv")
+Daten <- read.csv2("StudentPerformanceFactors.csv")
 #View(Daten)
 
 ```
