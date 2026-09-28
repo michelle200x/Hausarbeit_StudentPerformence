@@ -1,0 +1,883 @@
+---
+title: "Akademische Leistung von Schülern: Eine Untersuchung der Zusammenhänge mit der Lernzeit, Anwesenheit in Lehrveranstaltungen, früheren akademischen Leistungen und dem elterlichem Involvement - Eine multiple lineare Regressionsanalyse"
+author: "Christina Marie Wagener, Michelle Kha"
+date: "`r Sys.Date()`"
+lang: de
+format: 
+  pdf:
+    number-sections: true
+    colorlinks: true
+    fontsize: 12pt
+    fig-pos: "H"
+    toc: true
+    toc-title: "Inhaltsverzeichnis"
+    geometry:
+      - top=2.5cm
+      - bottom=2.5cm
+      - left=3cm
+      - right=2.5cm
+keywords:
+  - Keyword 1
+  - Keyword 2
+  - Keyword 3
+bibliography: Bibliography.bib
+abstract: |
+  Im Rahmen der vorliegenden Arbeit wird untersucht, inwieweit die akademische Leistung von    Schülern mit der Lernzeit, der Anwesenheit in Lehrveranstaltungen, früheren akademischen     Leistungen und dem elterlichem Involvement zusammenhängt. Hierzu wurde eine   Sekundärdatenanalyse auf Grundlage des auf Kaggle veröffentlichten Datensatzes „Student Performance Factors“ durchgeführt. Zur Untersuchung der Zusammenhänge wurde eine multiple lineare Regressionsanalyse durchgeführt. Aufgrund der festgestellten Heteroskedastizität wurden dabei heteroskedastizitätsrobuste Standardfehler verwendet. Die Ergebnisse der Regressionsanalyse zeigen für alle vier untersuchten Merkmale statistisch signifikante Zusammenhänge mit der akademischen Leistung. Eine höhere Lernzeit, eine höhere Anwesenheit in Lehrveranstaltungen und bessere frühere akademische Leistungen stehen in einem positiven Zusammenhang mit der akademischen Leistung. Zudem weisen Schüler mit niedrigem oder mittlerem elterlichem Involvement im Vergleich zu Schülern mit hohem elterlichem Involvement niedrigere Prüfungsleistungen auf. Durch das Regressionsmodell werden 60,6 % der Varianz der akademischen Leistung erklärt. Entsprechend zeigen die Ergebnisse, dass die untersuchten Faktoren gemeinsam mit der akademischen Leistung zusammenhängen. Aufgrund des gewählten Untersuchungsdesigns lassen sich daraus jedoch keine kausalen Schlussfolgerungen ableiten.
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+#|
+# Laden, einmalig in jeder Sitzung
+library(mosaic)
+library(knitr)
+library(kableExtra)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(stargazer)
+library(car)
+library(reshape2)
+library(lmtest)
+library(sandwich)
+```
+
+
+# Einleitung
+
+Die akademische Leistung stellt ein zentrales Anliegen im Bildungsbereich dar, da sie sowohl für den zukünftigen Erfolg von Schülern als auch für das gesellschaftliche Wohlergehen von Bedeutung ist [@suleiman2024key, p. 1] Bildung trägt zur Hervorbringung qualifizierter Arbeitskräfte bei, die zur wirtschaftlichen Entwicklung und zur Lösung gesellschaftlicher Probleme beitragen können [@tadese2022determinants, p. 1]. Studien zeigen zudem, dass akademisch erfolgreiche Schüler bessere Beschäftigungsmöglichkeiten und ein höheres Einkommen haben sowie unter anderem ein höheres Selbstwertgefühl und Selbstvertrauen aufweisen [@tadese2022determinants, p. 7f]. Das Verständnis der Zusammenhänge verschiedener Faktoren mit der akademischen Leistung ist daher für Schüler, den Hochschulbereich und Lehrkräfte [ @fenollar2007university, p. 873;@guney2009exogenous, p. 1] sowie politische Entscheidungsträger und Institutionen von Bedeutung [@suleiman2024key, p. 1]. Entsprechende Erkenntnisse können zur Entwicklung von Strategien zur Verbesserung von Lernergebnissen und zur Ableitung gezielter Interventionen beitragen [@suleiman2024key, p. 1]. Die akademische Leistung stellt jedoch ein vielschichtiges Konstrukt dar, das mit einer Vielzahl unterschiedlicher Faktoren zusammenhängt [ @al2022factors, p. 291; @suleiman2024key, p. 1]. Hierzu zählen individuelle Merkmale und Verhaltensweisen sowie sozioökonomische, familiäre und bildungsbezogene Faktoren [@suleiman2024key, p. 2]. Die Untersuchung dieser Zusammenhänge zielt darauf ab, ein besseres Verständnis der Bedeutung einzelner Faktoren für den akademischen Erfolg zu gewinnen [@suleiman2024key, p. 2]. In der bisherigen Forschung wurden unter anderem die Lernzeit [Ali u. a., -@ali2009factors, p. 283] und vorherige akademische Leistungen als Merkmale identifiziert, die mit dem akademischen Erfolg in Zusammenhang stehen [@suleiman2024key, p. 2]. Darüber hinaus hat sich gezeigt, dass die akademische Leistung sowohl mit endogenen Faktoren wie dem akademischen Engagement, als auch mit Faktoren zusammenhängt, die außerhalb der Kontrolle von Schülern liegen [@guney2009exogenous, p. 2]. Ein Beispiel hierfür ist das elterliche Involvement [@wilder2023effects, p. 377]. Trotz umfangreicher Forschung besteht weiterhin kein vollständiges Verständnis der Faktoren, die mit der akademischen Leistung zusammenhängen [@suleiman2024key, p. 2]. Dementsprechend wird in der vorliegenden Arbeit folgende Forschungsfrage untersucht: **Inwieweit hängt die akademische Leistung von Schülern mit der Lernzeit, der Anwesenheit in Lehrveranstaltungen, früheren akademischen Leistungen und dem elterlichen Involvement zusammen?** Zur Beantwortung der Forschungsfrage wird zunächst der aktuelle Forschungsstand dargelegt und daraus Hypothesen abgeleitet. Anschließend werden diese anhand statistischer Verfahren untersucht und die empirischen Ergebnisse erläutert. Abschließend werden die Ergebnisse diskutiert und die Arbeit mit einem Fazit geschlossen.
+
+# Theoretischer Hintergrund und Hypothesenentwicklung
+
+Wie bereits dargestellt, steht die akademische Leistung mit einer Vielzahl unterschiedlicher Faktoren in Zusammenhang. In der bisherigen Forschung wurden soziale, psychologische, wirtschaftliche, umweltbezogene und persönliche Faktoren als relevant für die akademische Leistung identifiziert [@mushtaq2012factors, p. 17]. Die Bedeutung dieser und ihr Zusammenhang mit der akademischen Leistung sind jedoch kontextabhängig und können je nach Person und Untersuchungsumfeld variieren [@mushtaq2012factors, p. 17]. Zu den häufig untersuchten Prädiktoren zählen u. a. frühere akademische Leistungen, [@abu2019factors, p. 567], Lernaktivitäten, Anwesenheit in Lehrveranstaltungen [Ali u. a., -@ali2009factors, p. 81] und die familiäre Unterstützung [@al2022factors, p. 284]. Vor diesem Hintergrund werden im Folgenden die Lernzeit (Hours Studied), die Anwesenheit (Attendance) und frühere akademische Leistungen (Previous Scores) sowie das elterliche Involvement (Parental Involvement) näher betrachtet. Dabei wird jeweils untersucht, in welchem Zusammenhang die Faktoren mit der akademischen Leistung stehen. Frühere Studien heben die Bedeutung der Lernzeit für die akademische Leistung hervor [@suleiman2024key, p. 3] und identifizieren sie als einen wichtigen Einflussfaktor [Ali u. a., -@ali2013factors, p. 287]. Die Ergebnisse zeigen einen positiven Zusammenhang zwischen den täglichen Lernstunden und der akademischen Leistung [Ali u. a., -@ali2013factors, p. 283] und einen Anstieg des Leistungsindex mit zunehmender Lernzeit. Auch die Wahrscheinlichkeit, ein höheres Leistungsniveau zu erreichen, nimmt mit zunehmender Lernzeit zu [@suleiman2024key, p. 14]. Die bisherige Forschung weist jedoch keine einheitlichen Ergebnisse auf. Neben Untersuchungen ohne signifikanten Zusammenhang wurden sowohl positive als auch negative Zusammenhänge zwischen Lernzeit und akademischem Erfolg festgestellt [@nonis2010performance, p. 230]. Angesichts der uneinheitlichen Ergebnisse früherer Studien besteht daher weiterhin Forschungsbedarf hinsichtlich des Zusammenhangs zwischen Lernzeit und akademischer Leistung [@nonis2010performance, p. 230].
+
+H1: Eine höhere Lernzeit steht in einem positiven Zusammenhang mit der akademischen Leistung.
+
+Schüler mit höherer Anwesenheit in Lehrveranstaltungen erzielen bessere akademische Leistungen als Schüler mit geringerer Anwesenheit [Ali u. a., -@ali2009factors, p. 86]. Die regelmäßige Anwesenheit ermöglicht den Zugang zu vermittelten Inhalten, Interaktionen mit Gleichaltrigen und weiteren lernfördernden Aktivitäten und trägt dadurch zur Leistung von Schülern bei [@hijazi2006factors, p. 9]. Das Ausbleiben derartiger Lernmöglichkeiten kann sich negativ auf den akademischen Erfolg auswirken [@morrissey2014family, p. 1]. Darüber hinaus kann kollaboratives Lernen durch den Zugang zu zusätzlichen Ressourcen und Informationen sowie durch den Austausch mit Gleichaltrigen und Lehrenden zur Verbesserung der Lernleistung beitragen [@qureshi2023factors, p. 13f]. Obwohl der Zusammenhang zwischen Anwesenheit und akademischem Erfolg bereits seit Langem Gegenstand wissenschaftlichen Interesses ist, gibt es dazu bisher nur wenige gezielte Untersuchungen [@gottfried2010evaluating, p. 1]. Die bisherigen Erkenntnisse weisen jedoch auf einen positiven Zusammenhang hin.
+
+H2: Eine höhere Anwesenheit steht in einem positiven Zusammenhang mit der akademischen Leistung.
+
+Frühere akademische Leistungen zählen zu den bedeutendsten Faktoren für die aktuelle akademische Leistung [@abu2019factors, p. 567; @al2022factors, p. 284]. Sie stellen einen zuverlässigen Prädiktor für die aktuelle akademische Leistung dar. Schüler mit besseren früheren akademischen Ergebnissen erbringen tendenziell bessere aktuelle Leistungen [@suleiman2024key, p. 15]. Auf dieser Grundlage wird ein positiver Zusammenhang zwischen früheren und aktuellen akademischen Leistungen erwartet.
+
+H3: Bessere frühere akademische Leistungen stehen in einem positiven Zusammenhang mit der akademischen Leistung.
+
+Eltern spielen eine zentrale Rolle bei der Unterstützung der Bildung und Entwicklung ihrer Kinder [@utami2022role, p. 37]. Der Grad des elterlichen Involvements stellt dabei einen signifikanten Prädiktor für den akademischen Erfolg dar [@utami2022role, p. 38]. Durch Anleitung, Unterstützung und die Bereitstellung von Ressourcen können Eltern zur akademischen Entwicklung ihrer Kinder beitragen [@utami2022role, p. 38]. Darüber hinaus können die Unterstützung bei Hausaufgaben, die Teilnahme an Schulveranstaltungen, die Kommunikation mit Lehrkräften und emotionale Unterstützung zur Verbesserung der Bildungsergebnisse beitragen [@utami2022role, p. 41]. Dieser positive Zusammenhang zeigt sich unabhängig von der ethnischen Zugehörigkeit der Kinder [@wilder2023effects, p. 384] und besteht unabhängig davon, wie elterliches Involvement definiert wird [@wilder2023effects, p. 377]. Trotz der nachgewiesenen Bedeutung des elterlichen Involvements für die akademische Leistung bestehen weiterhin Unklarheiten in Bezug auf den genauen Zusammenhang, sodass weiterer Forschungsbedarf besteht [@wilder2023effects, p. 394].
+
+H4: Ein hohes elterliches Involvement steht in einem positiven Zusammenhang mit der akademischen Leistung. 
+
+
+```{r}
+#| label: data-load
+#| 
+
+#getwd() # Aktuelles Arbeitsverzeichnis
+# csv Datensatz einlesen
+Daten <- read.csv2("/Users/michellekha/Downloads/StudentPerformanceFactors.csv")
+#View(Daten)
+
+```
+# Empirische Untersuchung
+## Datengrundlage und Datenaufbereitung
+
+Für die empirische Untersuchung der Forschungsfrage wird ein Datensatz verwendet, der über die Online-Plattform Kaggle veröffentlicht wurde. Da die vorliegende Arbeit somit auf bereits erhobenen Daten basiert, handelt es sich um eine Sekundärdatenanalyse. Der verwendete Datensatz trägt den Titel „Student Performance Factors“ und umfasst 6.607 Beobachtungen und 19 Variablen. Im Rahmen der vorliegenden Untersuchung wurden ausschließlich diejenigen Variablen berücksichtigt, die für die Beantwortung der Forschungsfrage von Relevanz sind. Diese sind die wöchentliche Lernzeit (Hours Studied), die Anwesenheit in Lehrveranstaltungen (Attendance), die früheren akademischen Leistungen (Previous Scores), das elterliche Involvement (Parental Involvement) sowie die akademische Leistung (Exam Score). 
+Vor der Durchführung der Regressionsanalyse wurde der Datensatz aufbereitet und bereinigt. Hierzu wurde auf doppelte Beobachtungen und Beobachtungen mit fehlenden Werten getestet. Die Datenbereinigung zeigte weder doppelte Beobachtungen noch Beobachtungen mit fehlenden Werten. Im Anschluss folgte die Prüfung der Wertebereiche der für die Analyse relevanten Variablen. Dabei wurde für die Variable Exam Score ein Maximalwert von 101 festgestellt. Da es sich bei der Variable um eine Punktzahl handelt und der Datensatz keine Erläuterung für einen Wert oberhalb von 100 enthält, wurde diese Beobachtung als nicht plausibel eingestuft und aus dem Datensatz entfernt. Dadurch reduzierte sich die Stichprobe von ursprünglich 6.607 auf 6.606 Beobachtungen.
+
+```{r}
+#| label: Formatierung der Daten
+#| 
+#Datensatz in eine Tabelle erstellen
+
+neuer_datensatz <- Daten %>%
+  separate(     col = Hours_Studied.Attendance.Parental_Involvement.Access_to_Resources.Extracurricular_Activities.Sleep_Hours.Previous_Scores.Motivation_Level.Internet_Access.Tutoring_Sessions.Family_Income.Teacher_Quality.School_Type.Peer_Influence.Physical_Activity.Learning_Disabilities.Parental_Education_Level.Distance_from_Home.Gender.Exam_Score,
+    into = c("Hours_Studied", "Attendance", "Parental_Involvement","Access_to_Resources","Extracurricular_Activities","Sleep_Hours","Previous_Scores", "Motivation_Level", "Internet_Access", "Tutoring_Sessions","Family_Income","Teacher_Quality","School_Type","Peer_Influence","Physical_Activity","Learning_Disabilities","Parental_Education_Level","Distance_from_Home","Gender","Exam_Score"),
+    sep = ",")
+
+# Duplikationen entfernt
+
+Daten_ohne_Duplikate <- distinct(neuer_datensatz)
+# Spalten mit fehlenden Werten entfernt 
+Daten_bereinigt <- na.omit(Daten_ohne_Duplikate)
+
+
+# Datensatz nur mit den benötigen Varablen erstellt
+gefiltert_Daten <- Daten_bereinigt %>% select("Hours_Studied" ,"Attendance", "Previous_Scores","Exam_Score","Parental_Involvement")
+
+# char zu numeric 
+
+gefiltert_Daten$Exam_Score <- as.numeric(as.character(gefiltert_Daten$Exam_Score))
+
+# alles über 100 entfernt
+
+gefiltert_Daten_neu <- gefiltert_Daten[gefiltert_Daten$Exam_Score <= 100, ]
+
+gefiltert_Daten <- gefiltert_Daten_neu
+
+
+#View(gefiltert_Daten)
+
+```
+## Deskriptive Analyse
+
+Da die Variable Parental Involvement als kategoriale Variable mit drei Ausprägungen vorliegt, wurde sie für die Durchführung der multiplen linearen Regression mittels Dummy-Codierung in zwei Dummy-Variablen überführt. Dabei wurde die Ausprägung High als Referenzkategorie festgelegt, während die Kategorien Low und Medium durch entsprechende Dummy-Variablen abgebildet wurden. Im Anschluss wurden für die metrischen Variablen Hours Studied, Attendance, Previous Scores und Exam Score jeweils der Mittelwert, der Minimal- und Maximalwert sowie die Standardabweichung bestimmt. Die Ergebnisse sind in @tbl-erstellung-kennzahlen abgebildet. 
+```{r}
+#| label: tbl-erstellung-kennzahlen
+#| tbl-cap: "Kennzahlen"
+Hours_Studied_spalte <- gefiltert_Daten %>% select(Hours_Studied)
+
+# ERSTELLUNG der kennzahlen von den einzelnen Spalten
+gefiltert_Daten_Zahlen <- gefiltert_Daten %>%
+  mutate(
+    Hours_Studied   = as.numeric(Hours_Studied),
+    Attendance      = as.numeric(Attendance),
+    Previous_Scores = as.numeric(Previous_Scores),
+    Exam_Score      = as.numeric(Exam_Score)
+  )
+
+kennzahlen_Hours_Studied <- gefiltert_Daten_Zahlen %>%
+  summarise(
+      HS_Mittelwert = base::mean(Hours_Studied, na.rm = TRUE),
+      HS_Minimum    = base::min(Hours_Studied, na.rm = TRUE),
+      HS_Maximum    = base::max(Hours_Studied, na.rm = TRUE),
+      HS_Varianz    = stats::var(Hours_Studied, na.rm = TRUE),
+      HS_Stanardabweichung         = stats::sd(Hours_Studied, na.rm = TRUE)
+    )
+
+kennzahlen_Attendance <- gefiltert_Daten_Zahlen %>%
+  summarise(
+      A_Mittelwert = base::mean(Attendance, na.rm = TRUE),
+      A_Minimum    = base::min(Attendance, na.rm = TRUE),
+      A_Maximum    = base::max(Attendance, na.rm = TRUE),
+      A_Varianz    = stats::var(Attendance, na.rm = TRUE),
+      A_Stanardabweichung         = stats::sd(Attendance, na.rm = TRUE)
+    )
+
+kennzahlen_Previous_Scores <- gefiltert_Daten_Zahlen %>%
+  summarise(
+      PS_Mittelwert = base::mean(Previous_Scores, na.rm = TRUE),
+      PS_Minimum    = base::min(Previous_Scores, na.rm = TRUE),
+      PS_Maximum    = base::max(Previous_Scores, na.rm = TRUE),
+      PS_Varianz    = stats::var(Previous_Scores, na.rm = TRUE),
+      PS_Stanardabweichung         = stats::sd(Previous_Scores, na.rm = TRUE)
+    )
+
+kennzahlen_Exam_Score <- gefiltert_Daten_Zahlen %>%
+  summarise(
+      ES_Mittelwert = base::mean(Exam_Score, na.rm = TRUE),
+      ES_Minimum    = base::min(Exam_Score, na.rm = TRUE),
+      ES_Maximum    = base::max(Exam_Score, na.rm = TRUE),
+      ES_Varianz    = stats::var(Exam_Score, na.rm = TRUE),
+      ES_Stanardabweichung         = stats::sd(Exam_Score, na.rm = TRUE)
+    )
+
+# Große Tabelle anzeigen von allen 
+
+library(dplyr)
+library(tidyr) 
+
+deskriptive_tabelle <- gefiltert_Daten_Zahlen %>%
+  select(
+    Attendance,
+    Hours_Studied,
+    Previous_Scores,
+    Exam_Score
+  ) %>%
+  summarise(
+    across(
+      everything(),
+      list(
+        n = ~sum(!is.na(.)),
+        Min = ~min(., na.rm = TRUE),
+        Max = ~max(., na.rm = TRUE),
+        Median = ~median(., na.rm = TRUE),
+        Mean = ~mean(., na.rm = TRUE),
+        SD = ~sd(., na.rm = TRUE)
+      )
+    )
+  ) %>%
+  pivot_longer(
+    everything(),
+    names_to = c("Variable", "Kennzahl"),
+    names_pattern = "(.*)_(n|Min|Max|Median|Mean|SD)",
+    values_to = "Wert"
+  ) %>%
+  pivot_wider(
+    names_from = Variable,
+    values_from = Wert
+  )
+
+knitr::kable(
+  deskriptive_tabelle,
+  col.names = c(
+    "",
+    "Attendance",
+    "Hours Studied",
+    "Previous Scores",
+    "Exam Score"
+  ),
+  digits = 2,
+  booktabs = TRUE,
+  align = c("l", "c", "c", "c", "c")
+) |>
+  kable_styling(
+    full_width = FALSE,
+    position = "center",
+    font_size = 10
+  )
+
+
+```
+Die Anzahl der Lernstunden pro Woche liegt im Mittel bei 19,97 Stunden (SD = 5,99; Min = 1; Max = 44). Das Histogramm zeigt eine annähernd unimodale und glockenförmige Verteilung, deren Verteilungsschwerpunkt bei etwa 20 Stunden pro Woche liegt.
+
+```{r}
+#| label: fig-histogramm-Lernstunden
+#| fig-cap: "Histogramm Hours Studied"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_histogram( ~Hours_Studied, data = gefiltert_Daten_Zahlen, 
+             title = "Histogramm Hours Studied",
+             xlab = "Gelernte Stunden pro Woche", 
+             ylab = "Anzahl der Schüler/innen")
+
+```
+
+Die Beobachtungen konzentrieren sich überwiegend auf den Bereich zwischen etwa 10 und 30 Stunden. Der Boxplot bestätigt die Konzentration der Werte um den Median von 20 Stunden. Sowohl im unteren als auch im oberen Wertebereich sind einzelne Ausreißer erkennbar, wobei sich insbesondere mehrere hohe Werte oberhalb von etwa 37 Stunden beobachten lassen.
+```{r}
+#| label: fig-Boxplot-Lernstunden
+#| fig-cap: "Boxplot Hours Studied"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_boxplot( Hours_Studied ~., data = gefiltert_Daten_Zahlen) %>%
+  gf_labs(
+    title = "Boxplot Hours Studied",
+    y = "Gelernte Stunden pro Woche",
+    x = ""
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+```
+Der durchschnittliche Anteil der besuchten Lehrveranstaltungen liegt bei 79,97 % (SD = 11,55; Min = 60 %; Max = 100 %).
+
+```{r}
+#| label: fig-Histogramm-Attendance
+#| fig-cap: "Histogramm Attendance"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_histogram(~Attendance, data = gefiltert_Daten_Zahlen,
+             title = "Histogramm Attendance",
+             xlab = "Anwesenheit in Lernveranstaltung in Prozent", 
+             ylab = "Anzahl der Schüler/innen")
+
+```
+Der Boxplot zeigt, dass der Median bei 80 % liegt. Die mittleren 50 % der Beobachtungen liegen zwischen 70 % und 90 %. Einzelne Ausreißer sind nicht erkennbar. 
+
+```{r}
+#| label: fig-Boxplot-Anwesenheit
+#| fig-cap: "Boxplot Attendance"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_boxplot( Attendance ~., data = gefiltert_Daten_Zahlen) %>%
+  gf_labs(
+    title = "Boxplot Attendance",
+    y = "Anwesenheit im Untericht in Prozent",
+    x = ""
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+```
+
+Für die Previous Scores ergibt sich ein Mittelwert von 75,07 Punkten (SD = 14,40; Min = 50; Max = 100).
+
+```{r}
+#| label: fig-Histogramm-PS
+#| fig-cap: "Histogramm Previous Score"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_histogram(~Previous_Scores, data = gefiltert_Daten_Zahlen, 
+             title = "Histogramm Previous Score",
+             xlab = "Vorherige Prüfungspunktzahl", 
+             ylab = "Anzahl der Schüler/innen")
+
+
+```
+
+Der Boxplot weist einen Median von 75 Punkten auf, der damit nahe am Mittelwert von 75,07 Punkten liegt. In dem Boxplot sind keine Ausreißer erkennbar.
+
+```{r}
+#| label: fig-Boxplot-PS
+#| fig-cap: "Boxplot Previous Scores"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_boxplot( Previous_Scores ~., data = gefiltert_Daten_Zahlen) %>%
+  gf_labs(
+    title = "Boxplot Previous Scores",
+    y = "Vorherige Prüfungspunktzahl",
+    x = ""
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+
+
+```
+
+Der Exam Score weist einen Mittelwert von 67,23 auf (SD = 3,87; Min = 55; Max = 100).
+
+```{r}
+#| label: fig-histogramm-exam-score
+#| fig-cap: "Histogramm Exam Score"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_histogram( ~ Exam_Score , data = gefiltert_Daten_Zahlen, 
+             title = "Histogramm Exam Score",
+             xlab = "Prüfungspunktzahl (Exam Score)", 
+             ylab = "Anzahl der Schüler/innen")
+
+```
+Ergänzend zeigt der Boxplot einen Median von etwa 67 Punkten. Auffällig ist die hohe Anzahl an Ausreißern, insbesondere im oberen Wertebereich.
+```{r}
+#| label: fig-boxplot-exam-score
+#| fig-cap: "Boxplot Exam Score"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_boxplot( Exam_Score ~., data = gefiltert_Daten_Zahlen) %>%
+  gf_labs(
+    title = "Boxplot Exam Score",
+    y = "Prüfungspunktzahl (Exam Score)",
+    x = ""
+  ) +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+```
+Da es sich bei Parental Involvement um eine kategoriale Variable handelt, wurden für diese Variable keine metrischen Kennzahlen berechnet. Stattdessen wurden die absoluten und relativen Häufigkeiten der drei Ausprägungen Low, Medium und High betrachtet. Die Ergebnisse sind in @tbl-kennzahlen-pi dargestellt.
+
+```{r}
+#| label: tbl-kennzahlen-pi
+#| tbl-cap: "Kennzahlen elterliches Involvement"
+
+library(knitr)
+library(kableExtra)
+
+# Häufigkeiten berechnen
+abs_h <- table(gefiltert_Daten$Parental_Involvement)
+rel_h <- prop.table(abs_h) * 100
+
+tab_pi <- data.frame(
+  Kennzahl = c(
+    "Absolute Häufigkeit",
+    names(abs_h),
+    "Relative Häufigkeit (%)",
+    names(rel_h)
+  ),
+  Wert = c(
+    "",
+    as.numeric(abs_h),
+    "",
+    round(as.numeric(rel_h), 2)
+  )
+)
+
+ tab_pi <- data.frame(
+  Kennzahl = c(
+    "Absolute Häufigkeit",
+    names(abs_h),
+    "Relative Häufigkeit (%)",
+    names(rel_h)
+  ),
+  Wert = c(
+    "",
+    as.numeric(abs_h),
+    "",
+    round(as.numeric(rel_h), 2)
+  )
+)
+
+knitr::kable(
+  tab_pi,
+  col.names = c("", ""),
+  booktabs = TRUE,
+  align = c("l", "c")
+) |>
+  kable_styling(
+    full_width = FALSE,
+    position = "center",
+    font_size = 10
+  ) |>
+  row_spec(1, bold = TRUE) |>
+  row_spec(5, bold = TRUE)
+```
+
+Diese zeigen, dass die Ausprägung Medium mit 3.362 Beobachtungen und einem Anteil von 50,89 % am häufigsten vertreten ist. Die Ausprägung High liegt mit 1.908 Beobachtungen bei 28,88 %, während Low mit 1.336 Ausprägungen und einem Anteil von 20,22 % die geringste Häufigkeit aufweist. 
+
+```{r}
+#| label: fig-bar-pi
+#| fig-cap: "Säulendiagramm elterliches Involvement"
+#| fig-width: 5
+#| fig-height: 3
+
+
+gf_bar( ~ Parental_Involvement, data = gefiltert_Daten_Zahlen,
+             title = "Säulendiagramm elterliches Involvement",
+             xlab = "Elterliches Involvement", 
+             ylab = "Anzahl der Beobachtungen")
+
+```
+
+Zur ersten Beurteilung der Zusammenhänge zwischen der akademischen Leistung und den metrischen Prädiktoren wurden Streudiagramme erstellt. Zwischen der Anwesenheit und der akademischen Leistung ist ein positiver annähernd linearer Zusammenhang erkennbar. Gleichzeitig weisen die Beobachtungen jedoch eine gewisse Streuung auf. 
+
+```{r}
+#| label: fig-streudiagramm-es-a
+#| fig-cap: "Streudiagramm Exam Score vs. Anwesenheit"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_point( Exam_Score ~ Attendance, data = gefiltert_Daten_Zahlen,
+             binwidth = 2) %>%
+  gf_labs(
+    title = "Streudiagramm Exam Score vs. Anwesenheit",
+    x = "Anwesenheit",
+    y = "Exam Score"
+  )
+```
+
+Auch zwischen der Anzahl der Lernstunden und dem Exam Score zeigt sich ein positiver linearer Zusammenhang, bei dem jedoch einzelne Ausreißer erkennbar sind.
+
+```{r}
+#| label: fig-streudiagramm-es-hs
+#| fig-cap: "Streudiagramm Exam Score vs. Studied Hours"
+#| fig-width: 5
+#| fig-height: 3
+
+gf_point( Exam_Score ~ Hours_Studied, data = gefiltert_Daten_Zahlen,
+             binwidth = 2) %>%
+  gf_labs(
+    title = "Streudiagramm Score nach Lernzeit",
+    x = "Lernzeit in Stunden",
+    y = "Exam Score"
+  )
+```
+
+
+Zwischen Exam Score und Previous Scores deutet sich ein vergleichsweise schwacher linearer Zusammenhang an.
+
+```{r}
+#| label: fig-streudiagramm-es-ps
+#| fig-cap: "Streudiagramm Exam Score vs. Previous Scores"
+#| fig-width: 5
+#| fig-height: 3
+gf_point( Exam_Score ~ Previous_Scores, data = gefiltert_Daten_Zahlen,
+             binwidth = 2) %>%
+  gf_labs(
+    title = "Streudiagramm Exam Score vs vorherige Ergebnisse",
+    x = "Vorherige Ergebnisse in Punkten",
+    y = "Exam Score"
+  )
+
+```
+
+Zur weiterführenden Untersuchung des Zusammenhangs der akademischen Leistung mit den Prädiktoren wird eine multiple Regressionsanalyse durchgeführt. Das dazugehörige Regressionsmodell lässt sich wie folgt darstellen:
+
+$$
+\begin{gathered}
+\hat{Y}_{\text{Exam Score}}
+=
+a
++ b_1 \cdot \text{Hours Studied}
++ b_2 \cdot \text{Attendance}
++ b_3 \cdot \text{Previous Scores}
+\\
++ b_4 \cdot \text{Parental Involvement}_{\text{Low}}
++ b_5 \cdot \text{Parental Involvement}_{\text{Medium}}
+\end{gathered}
+$$
+```{r}
+#| label: tbl-multiple-regression
+#| tbl-cap: "Ergebnisse der multiplen linearen Regression"
+#| echo: false
+#| warning: false
+#| message: false
+
+library(broom)
+library(knitr)
+
+gefiltert_Daten_Zahlen$Parental_Involvement <- relevel(
+  factor(gefiltert_Daten_Zahlen$Parental_Involvement),
+  ref = "High"
+)
+
+lm1 <- lm(
+  Exam_Score ~ Attendance + Hours_Studied +
+    Previous_Scores + Parental_Involvement,
+  data = gefiltert_Daten_Zahlen
+)
+
+# Speichern, aber nicht ausgeben
+summary_lm1 <- summary(lm1)
+
+# Konfidenzintervalle
+Intervall_Daten <- confint(lm1)
+
+Regressionstabelle <- tidy(lm1)
+
+Regressionstabelle$term <- c(
+  "Konstante",
+  "Attendance",
+  "Hours Studied",
+  "Previous Scores",
+  "Parental Involvement: Low",
+  "Parental Involvement: Medium"
+)
+
+Regressionstabelle$B <- round(Regressionstabelle$estimate, 3)
+Regressionstabelle$SE <- round(Regressionstabelle$std.error, 3)
+Regressionstabelle$t <- round(Regressionstabelle$statistic, 2)
+
+Regressionstabelle$p <- ifelse(
+  Regressionstabelle$p.value < 0.001,
+  "< 0,001",
+  round(Regressionstabelle$p.value, 3)
+)
+
+Regressionstabelle <- Regressionstabelle[, c(
+  "term",
+  "B",
+  "SE",
+  "t",
+  "p"
+)]
+
+colnames(Regressionstabelle) <- c(
+  "Variable",
+  "B",
+  "SE",
+  "t",
+  "p"
+)
+
+kable(
+  Regressionstabelle,
+  booktabs = TRUE
+)
+```
+## Prüfung der Modellvoraussetzungen
+
+Vor der abschließenden Interpretation der Ergebnisse der Regressionsanalyse wurden zunächst die wesentlichen Modellvoraussetzungen des multiplen linearen Regressionsmodells überprüft. Hierzu wurden die Linearität, Homoskedastizität, Multikollinearität, Verteilung der Residuen sowie potenziell einflussreiche Beobachtungen untersucht. Zur Prüfung ob nichtlineare Kombinationen der erklärenden Variablen einen Einfluss auf die erklärte Varianz haben der Ramsey-RESET-Test durchgeführt. Der Test ergab einen Wert von RESET = 1,0381 bei einem p-Wert von 0.3744. Da der p-Wert über dem Signifikanzniveau von 5 % liegt, wird die Nullhypothese somit nicht verworfen. Folglich ergeben sich keine statistischen Hinweise auf eine Verletzung der Linearitätsannahme.
+
+```{r}
+#| label: tbl-reset
+#| tbl-cap: "Ergebnisse des Ramsey-RESET-Tests"
+#| echo: false
+#| warning: false
+#| message: false
+
+library(lmtest)
+library(knitr)
+
+# RESET-Test berechnen und speichern
+reset_ergebnis <- resettest(
+  lm1,
+  power = 2:4,
+  type = "fitted"
+)
+
+# Tabelle erstellen
+RESET_Tabelle <- data.frame(
+  Test = "Ramsey-RESET-Test",
+  RESET = round(as.numeric(reset_ergebnis$statistic), 4),
+  df1 = as.numeric(reset_ergebnis$parameter[1]),
+  df2 = as.numeric(reset_ergebnis$parameter[2]),
+  p = round(reset_ergebnis$p.value, 4)
+)
+
+kable(
+  RESET_Tabelle,
+  booktabs = TRUE,
+  col.names = c("Test", "RESET", "df1", "df2", "p")
+)
+
+```
+
+Zur Prüfung der Homoskedastizitätsannahme wurde zunächst ein Residualplot betrachtet. Dabei zeigt sich, dass die Residuen über den Bereich der angepassten Werte nicht vollständig gleichmäßig um null streuen. Der Großteil der Residuen liegt in der Nähe von null, während einzelne Residuen deutlich höhere positive Werte aufweisen. Dies deutet auf eine nicht konstante Varianz der Residuen hin.
+
+```{r}
+#| label: fig-Residualplot
+#| fig-cap: "Residualplot"
+#| fig-width: 5
+#| fig-height: 3
+#Homoskedastiztität 
+
+#Erstellung Residualplot
+
+gf_point(resid(lm1)~fitted(lm1), title = "Residualplot") %>%
+  gf_labs(x="Angepasste Werte", y="Residuum")
+
+```
+
+Ergänzend zur grafischen Betrachtung wurde der Goldfeld-Quandt-Test durchgeführt. Dieser weist auf eine statistisch signifikante Veränderung der Fehlervarianz zwischen den betrachteten Segmenten hin (GQ = 0,78931; p < .001). Die Nullhypothese einer konstanten Varianz der Residuen wird somit verworfen. Es liegt ein statistisch signifikanter Hinweis auf Heteroskedastizität vor. 
+
+```{r}
+#| label: tbl-Goldfeld-Quandt-Test
+#| tbl-cap: "Goldfeld-Quandt-Test"
+
+#Goldfeld-Quandt-Test
+gq_ergebnis <- gqtest(lm1, point = 0.5, fraction = 0.05, alternative = "two.sided")
+
+# Tabelle erstellen
+GQ_Tabelle <- data.frame(
+  Test = "Goldfeld-Quandt-Test",
+  GQ = round(as.numeric(gq_ergebnis$statistic), 5),
+  df1 = as.numeric(gq_ergebnis$parameter[1]),
+  df2 = as.numeric(gq_ergebnis$parameter[2]),
+  p = ifelse(
+    gq_ergebnis$p.value < 0.001,
+    "< 0,001",
+    round(gq_ergebnis$p.value, 4)
+  )
+)
+
+# Tabelle ausgeben
+kable(
+  GQ_Tabelle,
+  booktabs = TRUE,
+  col.names = c(
+    "Test",
+    "GQ",
+    "df1",
+    "df2",
+    "p"
+  )
+)
+
+```
+Zur Prüfung der Multikollinearität wurde aufgrund der kategorialen Variable Parental Involvement mit mehreren Freiheitsgraden der Generalized Variance Inflation Factor (GVIF) verwendet. Zur Vergleichbarkeit der Prädiktoren wurde der adjustierte GVIF (GVIF^(1/(2*Df))) betrachtet. Die Werte liegen für Attendance bei 1,000364, für Hours Studied bei 1,000470, für Previous Scores bei 1,000742 und für Parental Involvement bei 1,000231. Die Werte liegen damit deutlich unter den gängigen Schwellenwerten für eine problematische Multikollinearität. Entsprechend ergeben sich keine Hinweise auf eine relevante Multikollinearität.
+
+```{r}
+#| label: tbl-Varianzinflationsfaktor
+#| tbl-cap: "Varianzinflationsfaktor (VIF)"
+
+# Varianzinflationsfaktor (VIF)
+
+gvif_ergebnis <- car::vif(lm1)
+# In Dataframe umwandeln
+GVIF_Tabelle <- as.data.frame(gvif_ergebnis)
+
+# Variablennamen als eigene Spalte
+GVIF_Tabelle$Variable <- rownames(GVIF_Tabelle)
+rownames(GVIF_Tabelle) <- NULL
+
+# Reihenfolge der Spalten
+GVIF_Tabelle <- GVIF_Tabelle[, c(
+  "Variable",
+  "GVIF",
+  "Df",
+  "GVIF^(1/(2*Df))"
+)]
+
+# Tabelle
+kable(
+  GVIF_Tabelle,
+  booktabs = TRUE,
+  col.names = c(
+    "Variable",
+    "GVIF",
+    "df",
+    "Adjustierter GVIF"
+  )
+)
+
+
+
+```
+Zur Prüfung der Normalverteilungsannahme wurden ein Histogramm sowie ein Q-Q-Plot betrachtet. Das Histogramm zeigt, dass der Großteil der Residuen im Bereich um null liegt. Gleichzeitig weist die Verteilung eine Rechtsschiefe auf.
+
+```{r}
+#| label: fig-Normalverteilung
+#| fig-cap: "Normalverteilung"
+#| fig-width: 5
+#| fig-height: 3
+
+# Normalverteilung
+gf_histogram( ~ resid(lm1), bins = 30) %>%
+  gf_labs(
+    title = "Normalverteilung",
+    x = "Verteilung der Residuen des Regressionsmodells",
+    y = "Anzahl"
+  )
+```
+Entsprechend zeigen sich im Q-Q-Plot insbesondere im oberen Quantilsbereich deutliche Abweichungen von der Referenzlinie. Die Residuen weichen somit insbesondere aufgrund einzelner großer positiver Residuen von einer idealen Normalverteilung ab. Aufgrund der Stichprobengröße von n = 6.606 wurde kein Shapiro-Wilk-Test durchgeführt. 
+
+```{r}
+#| label: fig-Q-Q-Plot-Residuen
+#| fig-cap: "Q-Q-Plot Residuen"
+#| fig-width: 5
+#| fig-height: 3
+
+#Shapiro Test nicht möglich weil Probe über 5000
+
+#Q-Q-Plot Residuen
+
+gf_qq( ~ resid(lm1)) %>% gf_qqline() %>%
+  gf_labs(
+    x = "Theoretische Quantile",
+    y = "Residuen",
+    title = "Q-Q-Plot der Residuen"
+  )
+
+```
+Zur Identifikation potenziell einflussreicher Beobachtungen wurde die Cook’s Distance betrachtet. Dabei zeigten insbesondere die Beobachtungen 2596, 2688 und 4780 vergleichsweise hohe Werte. Bei der anschließenden Überprüfung der auffälligen Beobachtungen wurde festgestellt, dass diese keine unmittelbar erkennbaren fehlerhaften Werte aufwiesen.Die Beobachtungen weisen vergleichsweise geringe Lernzeiten bei gleichzeitig hohen Exam Scores auf. Diese Merkmalskombinationen stellen jedoch keinen hinreichenden Grund für eine Entfernung der Beobachtungen dar, sodass sie im Datensatz belassen wurden.
+```{r}
+#| label: fig-Cook-Distance-Plot
+#| fig-cap: "Cook's Distance Plot"
+#| fig-width: 5
+#| fig-height: 3
+
+# Cook's Distance Plot -> der Regression
+
+plot(
+  lm1,
+  which = 4,
+  sub.caption = ""
+)
+
+```
+
+Insgesamt zeigen die durchgeführten Prüfungen somit Abweichungen von der Homoskedastizitäts- und Normalverteilungsannahme.
+
+
+## Ergebnisse des multiplen Regressionsmodells
+
+Auf Grundlage der Prüfung der Modellvoraussetzungen wurde das zuvor spezifizierte Regressionsmodell unter Verwendung heteroskedastizitätsrobuster Standardfehler nach HC3 ausgewertet. Das Regressionsmodell weist ein Bestimmtheitsmaß von R² = 0,606 und ein adjustiertes Bestimmtheitsmaß von adj. R² = 0,606 auf. Entsprechend lassen sich rund 60,6 % der Varianz des Exam Scores durch die im Modell berücksichtigten Variablen erklären. Die geschätzte Regressionsgleichung lautet:
+
+
+$$
+\begin{gathered}
+\hat{Y}_{\text{Exam Score}}
+=
+42{,}851
++ 0{,}291 \cdot \text{Hours Studied}
++ 0{,}198 \cdot \text{Attendance}
++ 0{,}048 \cdot \text{Previous Scores}
+\\
+\quad
+- 1{,}952 \cdot \text{Parental Involvement}_{\text{Low}}
+- 1{,}027 \cdot \text{Parental Involvement}_{\text{Medium}}
+\end{gathered}
+$$
+
+Für die Variable Hours Studied ergibt sich ein Regressionskoeffizient von b= 0,291 bei einem robusten Standardfehler von 0,0055. Der Koeffizient ist statistisch signifikant ((t= 53,301), (p < .001)). Unter Kontrolle der übrigen Prädiktoren steht eine zusätzliche Lernstunde pro Woche mit einer Erhöhung des erwarteten Exam Scores um ca. 0,291 Punkte in Zusammenhang. Für die Variable Attendance ergibt sich ein Regressionskoeffizient von b = 0.198 bei einem heteroskedastizitätsrobusten Standardfehler von 0,0025. Der Koeffizient ist ebenfalls statistisch signifikant ((t= 79,814), (p < .001)). Unter Kontrolle der übrigen im Modell enthaltenen Variablen steht eine Erhöhung der Anwesenheit in Lehrveranstaltungen um einen Prozentpunkt mit einer Erhöhung des erwarteten Exam Scores um etwa 0,198 Punkte in Zusammenhang. Für Previous Scores beträgt der Regressionskoeffizient b= 0,048 bei einem robusten Standardfehler von 0,0023. Der Zusammenhang ist ebenfalls statistisch signifikant ((t= 21,406), (p < .001)). Unter Kontrolle der übrigen Prädiktoren steht eine Erhöhung der vorherigen akademischen Leistung um einen Punkt mit einer Erhöhung des erwarteten Exam Scores um etwa 0,048 Punkte in Zusammenhang. Für die kategoriale Variable Parental Involvement dient die Ausprägung High als Referenzkategorie. Der Koeffizient für die Kategorie Low beträgt b = -1,952 bei einem robusten Standardfehler von 0,0912. Der Unterschied zur Referenzkategorie ist statistisch signifikant ((t= -21,397), (p < .001)). Unter Kontrolle der übrigen Prädiktoren liegt der erwartete Exam Score von Beobachtungen mit geringem elterlichem Involvement damit im Mittel um etwa 1,952 Punkte unter dem der Referenzkategorie High. Für die Kategorie Medium ergibt sich ein Regressionskoeffizient von b= -1,027 bei einem robusten Standardfehler von 0,0717. Auch dieser Unterschied gegenüber der Referenzkategorie High ist statistisch signifikant ((t= -14,335), (p < .001)). Unter Kontrolle der übrigen Prädiktoren liegt der erwartete Exam Score von Beobachtungen mit mittlerem elterlichem Involvement somit im Mittel um etwa 1,027 Punkte unter dem der Referenzkategorie High. Die vollständigen Ergebnisse der multiplen linearen Regressionsanalyse einschließlich der heteroskedastizitätsrobusten Standardfehler sind in @tbl-robuste-standardfehler dargestellt.
+
+```{r}
+#| label: tbl-robuste-standardfehler 
+#| tbl-cap: "Ergebnisse multiple lineare Regressionsanalyse einschließlich heteroskedastizitätsrobuster Standardfehler"
+#| echo: false
+#| warning: false
+#| message: false
+
+# Regressionsmodell
+lm1 <- lm(
+  Exam_Score ~ Attendance +
+    Hours_Studied +
+    Previous_Scores +
+    Parental_Involvement,
+  data = gefiltert_Daten_Zahlen
+)
+
+# Robuste Standardfehler (HC3) nur speichern
+robust <- coeftest(
+  lm1,
+  vcov = vcovHC(lm1, type = "HC3")
+)
+
+# Modellgüte nur speichern
+R2 <- summary(lm1)$r.squared
+R2_adj <- summary(lm1)$adj.r.squared
+
+# Tabelle aus robusten Ergebnissen erstellen
+Robuste_Tabelle <- data.frame(
+  Variable = c(
+    "Konstante",
+    "Attendance",
+    "Hours Studied",
+    "Previous Scores",
+    "Parental Involvement: Low",
+    "Parental Involvement: Medium"
+  ),
+  B = as.numeric(robust[, 1]),
+  SE = as.numeric(robust[, 2]),
+  t = as.numeric(robust[, 3]),
+  p = as.numeric(robust[, 4])
+)
+
+# Runden
+Robuste_Tabelle$B <- round(Robuste_Tabelle$B, 3)
+Robuste_Tabelle$SE <- round(Robuste_Tabelle$SE, 3)
+Robuste_Tabelle$t <- round(Robuste_Tabelle$t, 2)
+
+# p-Werte formatieren
+Robuste_Tabelle$p <- ifelse(
+  Robuste_Tabelle$p < 0.001,
+  "< 0,001",
+  round(Robuste_Tabelle$p, 3)
+)
+
+# Tabelle ausgeben
+kable(
+  Robuste_Tabelle,
+  booktabs = TRUE,
+  col.names = c(
+    "Variable",
+    "B",
+    "Robuster SE (HC3)",
+    "t",
+    "p"
+  )
+)
+
+
+```
+
+
+## Prüfung der Hypothesen
+
+Basierend auf den Ergebnissen der multiplen Regressionsanalyse werden im Folgenden die zuvor aufgestellten Hypothesen geprüft. Für die Lernzeit zeigt sich ein positiver und statistisch signifikanter Regressionskoeffizient ((b= 0,291); (p < .001)). H1 wird somit durch die Ergebnisse der Regressionsanalyse unterstützt. Für die Anwesenheit in Lehrveranstaltungen zeigt sich ebenfalls ein positiver, statistisch signifikanter Zusammenhang mit dem Exam Score (b = 0.198; (p < .001)). Damit wird die in H2 formulierte Annahme ebenfalls unterstützt. Ein positiver und statistisch signifikanter Zusammenhang mit dem Exam Score ergibt sich auch für frühere akademische Leistungen (b= 0,048; (p < .001)). Damit wird der in H3 erwartete positive Zusammenhang durch die Ergebnisse der Regressionsanalyse unterstützt. Für das elterliche Involvement zeigen sich sowohl für die Kategorie Low (b= -1,952); (p < .001)) als auch für die Kategorie Medium ((b= -1,027); (p < .001)) statistisch signifikante negative Regressionskoeffizienten. Da High als Referenzkategorie festgelegt wurde, zeigen die negativen und statistisch signifikanten Koeffizienten für Low und Medium, dass beide Kategorien im Vergleich zu High mit einem niedrigeren erwarteten Exam Score verbunden sind. Diese Ergebnisse stehen somit mit der in H4 formulierten Annahme eines positiven Zusammenhangs zwischen hohem elterlichem Involvement und der akademischen Leistung im Einklang. Damit wird auch H4 unterstützt. Insgesamt zeigen die Ergebnisse für alle vier Hypothesen statistisch signifikante Zusammenhänge in der jeweils erwarteten Richtung. Damit werden H1, H2, H3 und H4 durch die Ergebnisse der multiplen Regressionsanalyse unterstützt.
+
+# Diskussion
+## Diskussion der Ergebnisse
+Im folgenden Abschnitt werden die Ergebnisse diskutiert, die im Rahmen der vorliegenden Arbeit gewonnen wurden. Das Ziel dieser Arbeit war die Untersuchung des Zusammenhangs zwischen der akademischen Leistung und der Lernzeit, der Anwesenheit in Lehrveranstaltungen, früheren akademischen Leistungen und dem elterlichen Involvement.
+Die Ergebnisse der multiplen linearen Regressionsanalyse zeigen für die vier untersuchten Prädiktoren statistisch signifikante Zusammenhänge in der jeweils antizipierten Richtung. Bei der Interpretation dieser Ergebnisse ist jedoch die Stichprobengröße von 6.606 Beobachtungen zu berücksichtigen, da mit zunehmender Stichprobengröße die statistische Teststärke zunimmt und auch vergleichsweise schwache Zusammenhänge statistisch signifikant werden können. Das Gesamtmodell erklärt rund 60,6 % der Varianz der akademischen Leistung (R²=.606; adj. R²=.606). Daraus lässt sich schlussfolgern, dass die vier im Rahmen der Arbeit untersuchten Variablen gemeinsam deutlich in Zusammenhang mit der akademischen Leistung stehen. Gleichzeitig bleiben jedoch etwa 39,4 % der Varianz durch das Modell unerklärt. Dieser Befund steht im Einklang mit der Annahme, dass die akademische Leistung ein mehrdimensionales Konstrukt darstellt, das mit einer Vielzahl unterschiedlicher sozioökonomischer, familiärer und bildungsbezogener Faktoren zusammenhängt [@al2022factors, p. 291; @suleiman2024key, p. 1f]. Somit bieten die vier untersuchten Variablen keine vollständige Erklärung für die akademische Leistung. Dennoch bilden sie einen relevanten Teil der Unterschiede in den Exam Scores innerhalb des untersuchten Datensatzes statistisch ab. Für die wöchentliche Lernzeit hat sich ein positiver und statistisch signifikanter Zusammenhang mit der akademischen Leistung gezeigt ((b= 0,291); (p < .001)). Dieser positive Zusammenhang steht im Einklang mit den im theoretischen Teil dieser Arbeit dargestellten Forschungsergebnissen, nach denen eine höhere Lernzeit mit besseren akademischen Leistungen in Zusammenhang steht [Ali u. a., -@ali2013factors, p. 283 ; @suleiman2024key, p. 14]. Gleichzeitig weist die bisherige Forschung jedoch kein einheitliches Bild auf. Neben den Studien, in denen ein positiver Zusammenhang festgestellt wurde [Ali u. a., -@ali2013factors, p. 283 ; @suleiman2024key, p. 14], ließen sich im Rahmen einiger Studien ebenfalls keine oder negative Zusammenhänge zwischen der Lernzeit und der akademischen Leistung beobachten [@nonis2010performance, p. 230]. Das im Rahmen dieser Arbeit erzielte Ergebnis unterstützt die Annahme eines positiven Zusammenhangs, liefert jedoch keine Erklärung für die unterschiedlichen Ergebnisse der bisherigen Forschung [@nonis2010performance, p. 230]. Ein möglicher Erklärungsbeitrag für die unterschiedlichen Befunde könnte darin liegen, dass die reine Betrachtung der aufgewendeten Lernzeit nicht ausreichend ist. So liegt die Annahme nah, dass der Zusammenhang zwischen der Lernzeit und der akademischen Leistung komplex ist und weitere Variablen wie Lerngewohnheiten einen Einfluss auf den Zusammenhang haben [@nonis2010performance, p. 236]. Darüber hinaus zeigte sich in einer Studie, dass der Zusammenhang der Lernzeit mit der akademischen Leistung stärker zusammenhing, wenn die Konzentrationsfähigkeit hoch war [@nonis2010performance, p. 236]. Daraus lässt sich schließen, dass die bloße Betrachtung der Lernzeit nicht abbildet, wie effektiv die aufgewendete Zeit genutzt wurde. Unterschiede in Lernstrategien und Konzentrationsfähigkeit können möglicherweise dazu beitragen, dass gleich lange Lernzeiten mit unterschiedlichen Prüfungsergebnissen zusammenhängen. Derartige Merkmale der Lernzeit wurden im Rahmen der durchgeführten Regressionsanalyse nicht berücksichtigt. Für die Anwesenheit in Lehrveranstaltungen hat sich ebenfalls ein positiver und statistisch signifikanter Zusammenhang mit dem Exam Score gezeigt (b = 0.198; (p < .001)). So steht unter Kontrolle der übrigen Prädiktoren ein zusätzlicher Prozentpunkt Anwesenheit durchschnittlich mit einem um ca. 0,198 Punkte höheren Exam Score in Zusammenhang. Der festgestellte Zusammenhang stimmt mit den Ergebnissen bisheriger Forschungen überein, nach denen eine höhere Anwesenheit mit besseren akademischen Leistungen zusammenhängt [Ali u. a., -@ali2009factors, p. 86]. Bisher wurde der direkte Zusammenhang zwischen der Anwesenheit in Lehrveranstaltungen und der akademischen Leistung nur in wenigen Studien gezielt untersucht [@gottfried2010evaluating, p. 1]. Die vorliegende Untersuchung ergänzt damit die bisherige Forschung. Eine mögliche Erklärung für den beobachteten Zusammenhang könnte darin liegen, dass regelmäßige Anwesenheit mit einem besseren Zugang zu Unterrichtsinhalten, Interaktionen mit Gleichaltrigen und weiteren lernfördernden Aktivitäten einhergeht [@hijazi2006factors, p. 9]. Darüber hinaus kann die Teilnahme an Lehrveranstaltungen den Austausch mit Gleichaltrigen und Lehrpersonen fördern. Insbesondere kollaboratives Lernen kann den Zugang zu weiteren Ressourcen und Informationen ermöglichen, wodurch sich die akademische Leistung verbessern kann [@qureshi2023factors, p. 13f]. Somit könnte der positive Zusammenhang nicht ausschließlich auf die reine Anwesenheit zurückzuführen sein, sondern ebenfalls darauf, welche Lerngelegenheit sich durch die Teilnahme an den Lehrveranstaltungen eröffnen. Folglich stellt sich die Frage, inwieweit die ausschließliche Betrachtung der Anwesenheit als Variable ausreichend ist, da dabei keine Unterschiede in Lehrmethoden, Unterrichtsinhalten und Klassengröße abgebildet werden. Die Annahme liegt nahe, dass die Anwesenheit selbst mit weiteren Merkmalen wie der Klassengröße zusammenhängt [@fenollar2007university, p. 885]. Für Previous Scores hat sich ebenfalls ein positiver und statistisch signifikanter Zusammenhang mit dem Exam Score gezeigt (b= 0,048; (p < .001)). Gemäß den Ergebnissen der Regressionsanalyse steht eine um einen Punkt höhere frühere akademische Leistung im Mittel mit einem um 0,048 Punkte höheren Exam Score in Zusammenhang. Dieses Ergebnis stimmt ebenfalls mit den zuvor dargestellten Forschungsergebnissen überein, gemäß denen Schüler mit besseren, früheren akademischen Leistungen ebenfalls bessere akademische Leistungen erzielen [@suleiman2024key, p. 15]. Der Befund entspricht den im theoretischen Hintergrund dargestellten Ergebnissen, nach denen frühere akademische Leistungen zu den relevanten Prädiktoren späterer akademischer Leistungen zählen [@abu2019factors, p. 567; @al2022factors, p. 284]. Das Ergebnis der vorliegenden Arbeit fügt sich entsprechend in den bisherigen Forschungsstand ein. Interessant ist dabei, dass im Rahmen der bivariaten Analyse zunächst nur ein vergleichsweise schwacher linearer Zusammenhang zwischen Previous Scores und dem Exam Score erkennbar war, die multiple Regressionsanalyse jedoch einen statistisch signifikanten Zusammenhang zeigt. Durch diese Erkenntnis wird deutlich, dass die Betrachtung eines einzelnen bivariaten Zusammenhangs nicht zwangsläufig dasselbe Bild liefert wie die gleichzeitige Berücksichtigung mehrerer Prädiktoren. Der vergleichsweise niedrige Regressionskoeffizient ist nicht unmittelbar mit den Koeffizienten der Variablen Attendance und Hours Studied vergleichbar, da diese auf unterschiedlichen Skalen gemessen wurden.  Auch für das elterliche Involvement zeigen sich statistisch signifikante Unterschiede zwischen den betrachteten Kategorien. Unter Kontrolle der übrigen Prädiktoren liegt der erwartete Exam Score für Schüler mit niedrigem elterlichem Involvement durchschnittlich 1,952 Punkte unter dem der Referenzgruppe (b= -1,952); (p < .001)). Für Schüler mit mittlerem elterlichem Involvement beträgt die Differenz zur Referenzgruppe durchschnittlich – 1,027 Punkte ((b= -1,027); (p < .001)). Somit weisen sowohl die Kategorie Low als auch Medium niedrigere erwartete Exam Scores auf als die Referenzgruppe High. Dieses Ergebnis steht im Einklang mit dem zuvor dargelegten Forschungsstand, nach dem elterliches Involvement von zentraler Bedeutung für die akademische Leistung ist [@utami2022role, p. 37]. Frühere Studien weisen darauf hin, dass Anleitung, Unterstützung und die Bereitstellung von Ressourcen zur akademischen Entwicklung von Kindern beitragen  [@utami2022role, p. 38] und die Unterstützung bei Hausaufgaben, die Teilnahme an Schulveranstaltungen, die Kommunikation mit Lehrkräften sowie emotionale Unterstützung positiv mit der akademischen Leistung zusammenhängen können [@utami2022role, p. 41]. Es gilt jedoch zu beachten, dass keine Aussage darüber getroffen werden kann, welche konkrete Form des elterlichen Involvements für den beobachteten Zusammenhang von Bedeutung war. Die Kategorisierung in Low, Medium und High umfasst unterschiedliche Formen elterlichen Involvements und erlaubt daher keine differenzierte Aussage über die konkrete Form. Dass trotz der unklaren Definition des elterlichen Involvements ein positiver Zusammenhang beobachtet werden konnte, stimmt mit der Erkenntnis einer vorherigen Studie überein, nach der dieser Zusammenhang unabhängig von der Definition des elterlichen Involvements besteht [@wilder2023effects, p. 377]. Darüber hinaus ist zu berücksichtigen, dass elterliches Involvement mit weiteren familiären oder individuellen Merkmalen zusammenhängt, die ebenfalls mit der akademischen Leistung zusammenhängen [@utami2022role, p. 41].
+
+## Limitationen
+
+Bei der Interpretation der Ergebnisse dieser Arbeit gilt es mehrere Limitationen der Untersuchung zu berücksichtigen. Eine erste Einschränkung ergibt sich aus der Auswahl der im Regressionsmodell berücksichtigten Variablen. Im Rahmen dieser Arbeit wurden ausschließlich Lernzeit, Anwesenheit, frühere akademische Leistungen und das elterliche Involvement betrachtet. Der herangezogene Datensatz enthält jedoch weitere Merkmale wie die Motivation, Zugang zu Ressourcen und Schlaf, die nicht im Rahmen der Regressionsanalyse berücksichtigt wurden. Da die akademische Leistung jedoch mit einer Vielzahl verschiedener Merkmale zusammenhängt [ @al2022factors, p. 291; @suleiman2024key, p. 1], lässt sich nicht ausschließen, dass die Berücksichtigung weiterer Variablen zu einer veränderten Einschätzung der untersuchten Zusammenhänge führen würde. Der Anteil von 39,4 % der Varianz des Exam Scores, der sich nicht durch das Modell erklären lässt, verdeutlicht, dass weitere, nicht berücksichtigte Merkmale mit der akademischen Leistung zusammenhängen. Anhand des ungeklärten Varianzanteil lässt sich jedoch nicht darauf schließen, um welche Variablen es sich dabei handelt. Eine weitere Einschränkung ergibt sich durch die Verwendung eines Sekundärdatensatzes, wodurch keine Kontrolle über die Operationalisierung der Variablen bestand. Dadurch lässt sich bspw. bei dem elterlichen Involvement nicht untersuchen, welche konkreten Formen des elterlichen Involvements mit der akademischen Leistung zusammenhängen. Darüber hinaus wurden im Rahmen der Cook’s-Distance-Analyse einzelne potenziell einflussreiche Beobachtungen identifiziert. Die Beobachtungen 2596, 2688 und 4780 weisen auffällige Merkmalskombinationen auf, indem bei einer vergleichsweise geringen wöchentlichen Lernzeit hohen Exam Scores erzielt wurden. Entsprechend weisen diese Schüler trotz unterdurchschnittlicher Ausprägung der untersuchten Prädiktoren deutlich überdurchschnittliche Prüfungsergebnisse auf, was möglicherweise auf nicht im Modell berücksichtigte Faktoren zurückzuführen sein könnte. Eine weitere Einschränkung ergibt sich aus der festgestellten Heteroskedastizität und der Abweichung der Residuen von einer idealen Normalverteilung. Insgesamt waren die Modellvoraussetzungen somit nicht vollständig erfüllt, wodurch die Interpretation der Ergebnisse eingeschränkt wird. Zudem erlauben die Daten die Analyse statistischer Zusammenhänge, jedoch können keine kausalen Beziehungen identifiziert werden und es lässt sich keine vollständige Erklärung der akademischen Leistung ableiten.
+
+# Fazit
+
+Im Rahmen der vorliegenden Arbeit galt es, die Frage zu beantworten, inwieweit die akademische Leistung von Schülern mit der Lernzeit, der Anwesenheit in Lehrveranstaltungen, früheren akademischen Leistungen und dem elterlichen Involvement zusammenhängt. Die Ergebnisse der multiplen linearen Regressionsanalyse zeigen, dass alle vier untersuchten Merkmale statistisch signifikant mit dem Exam Score zusammenhängen. Eine längere Lernzeit, eine höhere Anwesenheit sowie bessere frühere akademische Leistungen weisen unter Kontrolle der jeweils anderen Merkmale einen positiven Zusammenhang mit dem Exam Score auf. Schüler mit niedrigem oder mittlerem elterlichem Involvement erzielen durchschnittlich niedrigere Exam Scores als Schüler mit hohem elterlichem Involvement. Die in Abschnitt 2 aufgestellten Hypothesen H1 bis H4 werden damit durch die empirischen Ergebnisse unterstützt. Das Gesamtmodell weist ein Bestimmtheitsmaß von R²= 0,606 auf. Die untersuchten Merkmale tragen gemeinsam zur statistischen Erklärung der Unterschiede im Exam Score innerhalb des Datensatzes bei. Gleichzeitig lässt sich ein Teil der Varianz nicht durch das Modell erklären, d. h. die akademische Leistung lässt sich nicht vollständig durch die untersuchten Merkmale erklären. Dies deutet darauf hin, dass neben den untersuchten Variablen weitere, nicht im Modell berücksichtigte Merkmale mit der akademischen Leistung zusammenhängen können. Insgesamt stimmen die gewonnenen Ergebnisse mit denen vorangegangener Untersuchungen überein, die einen positiven Zusammenhang zwischen der akademischen Leistung und der Anwesenheit [@lukkarinen2016relationship, p. 345], früheren akademischen Leistungen [@suleiman2024key, p.2], dem elterlichen Involvement [@wilder2023effects, p. 384] sowie der Lernzeit berichten 
+[Ali u. a., -@ali2013factors, p. 283]. Die Ergebnisse der Regressionsanalyse zeigen zudem, dass die akademische Leistung mit mehreren Merkmalen gleichzeitig zusammenhängt. Diese Erkenntnis stimmt ebenfalls mit den Ergebnissen früherer Forschungsarbeiten überein [@suleiman2024key, p. 1 ; @al2022factors, p. 291]. Die Ergebnisse sind jedoch vor dem Hintergrund der methodischen Einschränkungen der Untersuchung zu interpretieren. Insbesondere die Verwendung eines Sekundärdatensatzes, potenziell einflussreiche Beobachtungen und nicht vollständig erfüllte Modellvoraussetzungen schränken die Aussagekraft der Ergebnisse ein. Zudem ermöglicht das Untersuchungsdesign keine kausalen Schlussfolgerungen. Die Forschungsfrage lässt sich daher dahingehend beantworten, dass die Lernzeit, die Anwesenheit in Lehrveranstaltungen, frühere akademische Leistungen und das elterliche Involvement einen Teil der Unterschiede in der akademischen Leistung innerhalb des untersuchten Datensatzes statistisch erklären, ohne dass daraus kausale Wirkungen abgeleitet werden können. Für zukünftige Forschung erscheint es sinnvoll, weitere Merkmale wie Motivation, Lernstrategien und sozioökonomische Bedingungen einzubeziehen [@suleiman2024key, p. 2] und deren zusätzlichen Erklärungsbeitrag zur akademischen Leistung zu untersuchen. Hierbei können eigene Datenerhebungen ermöglichen, die relevanten Merkmale gezielter zu operationalisieren und die Zusammenhänge unter kontrollierteren Bedingungen weiterführend zu untersuchen.
+
+---
+\newpage
+# Literatur {.unnumbered}
